@@ -5,6 +5,7 @@ open Shaftesbury.Span.XML.Parser
 open Shaftesbury.Span.LCH.ExpandedFormat
 open Shaftesbury.Span.HK.ExpandedFormat
 
+// download these from http://www.asx.com.au/sfe/span.htm
 let XMLfilenames = 
     [
         "ASXCLFEndOfDayRiskParameterFile130306.spn";
@@ -14,6 +15,7 @@ let XMLfilenames =
         "ASXCLFEndOfDayRiskParameterFile130319.spn";
     ] |> List.map (fun nm -> @"C:\Users\Bob\development\data\Span\"+nm)
 
+// download these from http://www.hkex.com.hk/eng/market/rm/rm_dcrm/riskdata/rpf/riskdata.asp
 let HKfilenames = 
     [
         "rci______-_____-__-_____-130314-0844.lis";
@@ -36,6 +38,7 @@ let CMEfilenames =
     ]
     |> List.map (fun nm -> @"C:\Users\Bob\development\data\Span\"+nm)
 
+// download these from http://www.lchclearnet.com/data_downloads/ltd/span.asp
 let LCHfilenames = 
     [
 //        "EF130305.DAT";
