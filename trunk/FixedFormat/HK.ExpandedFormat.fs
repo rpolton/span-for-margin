@@ -3,6 +3,8 @@
 module ExpandedFormat =
     open Shaftesbury.FSharp.Utils
 
+// file format found here http://www.hkex.com.hk/chi/market/rm/rm_dcrm/riskdata/Documents/Risk%20Parameter%20File%20Descriptions.pdf
+
     let HKformat_lengths =
         [
             "0", [2;6;8;1;2;4;8;4;2;1;1;5;6;1;1;5;];

@@ -3,6 +3,9 @@
 module ExpandedFormat =
     open Shaftesbury.FSharp.Utils
 
+// go here http://www.lchclearnet.com/risk_management/ltd/margining/london_span_for_exchanges/technical_specifications/default.asp
+// for documentation of the format and the calculations
+
     let LCHformat_lengths =
         [
             "10", [2;1;2;8;2;8;6;3;];
