@@ -67,7 +67,7 @@ module Parser =
             }), div
 
     let readUndC (reader:System.Xml.XmlReader) : nodeType * tree list =
-        let dict = ["exch","":>obj; "pfId",0:>obj; "cId",0:>obj; "s","":>obj; "i",0.0:>obj; ] |> toDict
+        let dict = ["exch","":>obj; "pfId",0:>obj; "cId",0:>obj; "s","":>obj; "i",0.0:>obj; "legPriceFlag","":>obj; "legPrice",0.0:>obj; "type","":>obj] |> toDict
 
         let rec read () =
             match reader.Name with
@@ -76,6 +76,9 @@ module Parser =
             | "cId" as name -> dict.[name] <- readAsInt reader ; read ()
             | "s" as name -> dict.[name] <- readAsString reader ; read ()
             | "i" as name -> dict.[name] <- readAsFloat reader ; read ()
+            | "legPriceFlag" as name -> dict.[name] <- readAsString reader ; read ()
+            | "legPrice" as name -> dict.[name] <- readAsFloat reader ; read ()
+            | "type" as name -> dict.[name] <- readAsString reader ; read ()
             | _ -> ignore ()
         reader.ReadStartElement()
         read ()
@@ -87,17 +90,21 @@ module Parser =
                     CId = dict.["cId"] :?> int
                     S = dict.["s"] :?> string
                     I = dict.["i"] :?> float
+                    LegPriceFlag = dict.["legPriceFlag"] :?> string
+                    LegPrice = dict.["legPrice"] :?> float
+                    Type = dict.["type"] :?> string
             }), []
 
     let readIntrRate (reader:System.Xml.XmlReader) : nodeType * tree list =
-        let dict = ["val",0.0:>obj; "rl",0:>obj; "cpm",0:>obj; "exm",0:>obj; ] |> toDict
+        let dict = ["val",0.0:>obj; "rl",0.0:>obj; "cpm",0.0:>obj; "exm",0.0:>obj; "tm",0.0:>obj ] |> toDict
 
         let rec read () =
             match reader.Name with
             | "val" as name -> dict.[name] <- readAsFloat reader ; read ()
-            | "rl" as name -> dict.[name] <- readAsInt reader ; read ()
-            | "cpm" as name -> dict.[name] <- readAsInt reader ; read ()
-            | "exm" as name -> dict.[name] <- readAsInt reader ; read ()
+            | "rl" as name -> dict.[name] <- readAsFloat reader ; read ()
+            | "cpm" as name -> dict.[name] <- readAsFloat reader ; read ()
+            | "exm" as name -> dict.[name] <- readAsFloat reader ; read ()
+            | "tm" as name -> dict.[name] <- readAsFloat reader ; read ()
             | _ -> ignore ()
         reader.ReadStartElement()
         read ()
@@ -105,30 +112,53 @@ module Parser =
         SpanXMLIntrRate(
             {
                     Val = dict.["val"] :?> float
-                    Rl = dict.["rl"] :?> int
-                    Cpm = dict.["cpm"] :?> int
-                    Exm = dict.["exm"] :?> int
+                    Rl = dict.["rl"] :?> float
+                    Cpm = dict.["cpm"] :?> float
+                    Exm = dict.["exm"] :?> float
+                    Tm = dict.["tm"] :?> float
             }), []
 
-    let readOpt (reader:System.Xml.XmlReader) : nodeType * tree list =
-        let dict = ["cId",0:>obj; "o","":>obj; "k",0.0:>obj; "p",0.0:>obj; "pq",0:>obj; "d",0.0:>obj; "v",0.0:>obj; "val",0.0:>obj; "cvf",0.0:>obj; "svf",0.0:>obj; ] |> toDict
+    let readAlias (reader:System.Xml.XmlReader) : nodeType * tree list =
+        let dict = ["aType","":>obj; "aVal","":>obj] |> toDict
 
-        let rec read ra =
+        let rec read () =
             match reader.Name with
-            | "cId" as name -> dict.[name] <- readAsInt reader ; read ra
-            | "o" as name -> dict.[name] <- readAsString reader ; read ra
-            | "k" as name -> dict.[name] <- readAsFloat reader ; read ra
-            | "p" as name -> dict.[name] <- readAsFloat reader ; read ra
-            | "pq" as name -> dict.[name] <- readAsInt reader ; read ra
-            | "d" as name -> dict.[name] <- readAsFloat reader ; read ra
-            | "v" as name -> dict.[name] <- readAsFloat reader ; read ra
-            | "val" as name -> dict.[name] <- readAsFloat reader ; read ra
-            | "cvf" as name -> dict.[name] <- readAsFloat reader ; read ra
-            | "svf" as name -> dict.[name] <- readAsFloat reader ; read ra
-            | "ra" as name -> read (Node (readRa reader) :: ra)
-            | _ -> ra
+            | "aType" as name -> dict.[name] <- readAsString reader ; read ()
+            | "aVal" as name -> dict.[name] <- readAsString reader ; read ()
+            | _ -> ignore ()
         reader.ReadStartElement()
-        let ra = read []
+        read ()
+        reader.ReadEndElement()
+        SpanXMLAlias(
+            {
+                    AType = dict.["aType"] :?> string
+                    AVal = dict.["aVal"] :?> string
+            }), []
+
+
+    let readOpt (reader:System.Xml.XmlReader) : nodeType * tree list =
+        let dict = ["cId",0:>obj; "o","":>obj; "k",0.0:>obj; "p",0.0:>obj; "pq",0:>obj; "d",0.0:>obj; "v",0.0:>obj; "val",0.0:>obj; "cvf",0.0:>obj; "svf",0.0:>obj; "priceType","":>obj; "volType","":>obj; "sc","":>obj] |> toDict
+
+        let rec read ra alias =
+            match reader.Name with
+            | "cId" as name -> dict.[name] <- readAsInt reader ; read ra alias
+            | "o" as name -> dict.[name] <- readAsString reader ; read ra alias
+            | "k" as name -> dict.[name] <- readAsFloat reader ; read ra alias
+            | "p" as name -> dict.[name] <- readAsFloat reader ; read ra alias
+            | "pq" as name -> dict.[name] <- readAsInt reader ; read ra alias
+            | "d" as name -> dict.[name] <- readAsFloat reader ; read ra alias
+            | "v" as name -> dict.[name] <- readAsFloat reader ; read ra alias
+            | "val" as name -> dict.[name] <- readAsFloat reader ; read ra alias
+            | "cvf" as name -> dict.[name] <- readAsFloat reader ; read ra alias
+            | "svf" as name -> dict.[name] <- readAsFloat reader ; read ra alias
+            | "priceType" as name -> dict.[name] <- readAsString reader ; read ra alias
+            | "volType" as name -> dict.[name] <- readAsString reader ; read ra alias
+            | "sc" as name -> dict.[name] <- readAsString reader ; read ra alias
+            | "ra" as name -> read (Node (readRa reader) :: ra) alias
+            | "alias" as name -> read ra (Node (readAlias reader) :: alias)
+            | _ -> ra, alias
+        reader.ReadStartElement()
+        let ra, alias = read [] []
         reader.ReadEndElement()
         SpanXMLOpt(
             {
@@ -142,7 +172,10 @@ module Parser =
                     Val = dict.["val"] :?> float
                     Cvf = dict.["cvf"] :?> float
                     Svf = dict.["svf"] :?> float
-            }), ra
+                    PriceType = dict.["priceType"] :?> string
+                    VolType = dict.["volType"] :?> string
+                    Sc = dict.["sc"] :?> string
+            }), (ra @ alias)
 
     let readRate (reader:System.Xml.XmlReader) : nodeType * tree list =
         let dict = ["r",0:>obj; "val",0.0:>obj; ] |> toDict
@@ -162,7 +195,7 @@ module Parser =
             }), []
 
     let readScanRate (reader:System.Xml.XmlReader) : nodeType * tree list =
-        let dict = ["r",0:>obj; "priceScan",0.0:>obj; "priceScanPct",0.0:>obj; "volScan",0.0:>obj; "volScanPct",0.0:>obj; ] |> toDict
+        let dict = ["r",0:>obj; "priceScan",0.0:>obj; "priceScanPct",0.0:>obj; "volScan",0.0:>obj; "volScanPct",0.0:>obj; "priceScanDown",0.0:>obj; "priceScanDownPct",0.0:>obj; "volScanDown",0.0:>obj; "volScanDownPct",0.0:>obj; "quoteInOptTerms","":>obj] |> toDict
 
         let rec read () =
             match reader.Name with
@@ -171,6 +204,11 @@ module Parser =
             | "priceScanPct" as name -> dict.[name] <- readAsFloat reader ; read ()
             | "volScan" as name -> dict.[name] <- readAsFloat reader ; read ()
             | "volScanPct" as name -> dict.[name] <- readAsFloat reader ; read ()
+            | "priceScanDown" as name -> dict.[name] <- readAsFloat reader ; read ()
+            | "priceScanDownPct" as name -> dict.[name] <- readAsFloat reader ; read ()
+            | "volScanDown" as name -> dict.[name] <- readAsFloat reader ; read ()
+            | "volScanDownPct" as name -> dict.[name] <- readAsFloat reader ; read ()
+            | "quoteInOptTerms" as name -> dict.[name] <- readAsString reader ; read ()
             | _ -> ignore ()
         reader.ReadStartElement()
         read ()
@@ -182,16 +220,22 @@ module Parser =
                     PriceScanPct = dict.["priceScanPct"] :?> float
                     VolScan = dict.["volScan"] :?> float
                     VolScanPct = dict.["volScanPct"] :?> float
+                    PriceScanDown = dict.["priceScanDown"] :?> float
+                    PriceScanDownPct = dict.["priceScanDownPct"] :?> float
+                    VolScanDown = dict.["volScanDown"] :?> float
+                    VolScanDownPct = dict.["volScanDownPct"] :?> float
+                    QuoteInOptTerms = dict.["quoteInOptTerms"] :?> string
             }), []
 
     let readPriceScanDef (reader:System.Xml.XmlReader) : nodeType * tree list =
-        let dict = ["mult",0.0:>obj; "numerator",0.0:>obj; "denominator",0.0:>obj; ] |> toDict
+        let dict = ["mult",0.0:>obj; "numerator",0.0:>obj; "denominator",0.0:>obj; "defType","":>obj] |> toDict
 
         let rec read () =
             match reader.Name with
             | "mult" as name -> dict.[name] <- readAsFloat reader ; read ()
             | "numerator" as name -> dict.[name] <- readAsFloat reader ; read ()
             | "denominator" as name -> dict.[name] <- readAsFloat reader ; read ()
+            | "defType" as name -> dict.[name] <- readAsString reader ; read ()
             | _ -> ignore ()
         reader.ReadStartElement()
         read ()
@@ -201,6 +245,7 @@ module Parser =
                     Mult = dict.["mult"] :?> float
                     Numerator = dict.["numerator"] :?> float
                     Denominator = dict.["denominator"] :?> float
+                    DefType = dict.["defType"] :?> string
             }), []
 
     let readVolScanDef (reader:System.Xml.XmlReader) : nodeType * tree list =
@@ -222,35 +267,102 @@ module Parser =
                     Denominator = dict.["denominator"] :?> float
             }), []
 
-    let readPhy (reader:System.Xml.XmlReader) : nodeType * tree list =
-        let dict = ["cId",0:>obj; "pe","":>obj; "p",0.0:>obj; "d",0.0:>obj; "v",0.0:>obj; "cvf",0.0:>obj; "val",0.0:>obj; "sc",0.0:>obj; ] |> toDict
+    let readTick (reader:System.Xml.XmlReader) : nodeType * tree list =
+        let dict = ["id","":>obj; "val",0.0:>obj; "loVal","":>obj; "hiVal","":>obj; "desc","":>obj; ] |> toDict
 
-        let rec read ra =
+        let rec read () =
             match reader.Name with
-            | "cId" as name -> dict.[name] <- readAsInt reader ; read ra
-            | "pe" as name -> dict.[name] <- readAsString reader ; read ra
-            | "p" as name -> dict.[name] <- readAsFloat reader ; read ra
-            | "d" as name -> dict.[name] <- readAsFloat reader ; read ra
-            | "v" as name -> dict.[name] <- readAsFloat reader ; read ra
-            | "cvf" as name -> dict.[name] <- readAsFloat reader ; read ra
-            | "val" as name -> dict.[name] <- readAsFloat reader ; read ra
-            | "sc" as name -> dict.[name] <- readAsFloat reader ; read ra
-            | "ra" as name -> read (Node (readRa reader) :: ra)
-            | _ -> ra
+            | "id" as name -> dict.[name] <- readAsString reader ; read ()
+            | "val" as name -> dict.[name] <- readAsFloat reader ; read ()
+            | "loVal" as name -> dict.[name] <- readAsString reader ; read ()
+            | "hiVal" as name -> dict.[name] <- readAsString reader ; read ()
+            | "desc" as name -> dict.[name] <- readAsString reader ; read ()
+            | _ -> ignore ()
         reader.ReadStartElement()
-        let ra = read []
+        read ()
+        reader.ReadEndElement()
+        SpanXMLTick(
+            {
+                    Id = dict.["id"] :?> string
+                    Val = dict.["val"] :?> float
+                    LoVal = dict.["loVal"] :?> string
+                    HiVal = dict.["hiVal"] :?> string
+                    Desc = dict.["desc"] :?> string
+            }), []
+
+    let readVenue (reader:System.Xml.XmlReader) : nodeType * tree list =
+        let dict = ["id","":>obj; "hours","":>obj; "listDesc","":>obj; "flexDesc","":>obj; "strikeDesc","":>obj; "limits","":>obj; "limitsDesc","":>obj; "fdotRule","":>obj; "ldotRule","":>obj; ] |> toDict
+
+        let rec read tick =
+            match reader.Name with
+            | "id" as name -> dict.[name] <- readAsString reader ; read tick
+            | "hours" as name -> dict.[name] <- readAsString reader ; read tick
+            | "listDesc" as name -> dict.[name] <- readAsString reader ; read tick
+            | "flexDesc" as name -> dict.[name] <- readAsString reader ; read tick
+            | "strikeDesc" as name -> dict.[name] <- readAsString reader ; read tick
+            | "limits" as name -> dict.[name] <- readAsString reader ; read tick
+            | "limitsDesc" as name -> dict.[name] <- readAsString reader ; read tick
+            | "fdotRule" as name -> dict.[name] <- readAsString reader ; read tick
+            | "ldotRule" as name -> dict.[name] <- readAsString reader ; read tick
+            | "tick" as name -> read (Node (readTick reader) :: tick)
+            | _ -> tick
+        reader.ReadStartElement()
+        let tick = read []
+        reader.ReadEndElement()
+        SpanXMLVenue(
+            {
+                    Id = dict.["id"] :?> string
+                    Hours = dict.["hours"] :?> string
+                    ListDesc = dict.["listDesc"] :?> string
+                    FlexDesc = dict.["flexDesc"] :?> string
+                    StrikeDesc = dict.["strikeDesc"] :?> string
+                    Limits = dict.["limits"] :?> string
+                    LimitsDesc = dict.["limitsDesc"] :?> string
+                    FdotRule = dict.["fdotRule"] :?> string
+                    LdotRule = dict.["ldotRule"] :?> string
+            }), tick
+
+    let readPhy (reader:System.Xml.XmlReader) : nodeType * tree list =
+        let dict = ["cId",0:>obj; "pe","":>obj; "p",0.0:>obj; "priceType","":>obj; "d",0.0:>obj; "v",0.0:>obj; "volType","":>obj; 
+            "cvf",0.0:>obj; "val",0.0:>obj; "sc",0.0:>obj; "haircut","":>obj; "haircutRsv","":>obj;] |> toDict
+
+        let rec read tick venue scanRate ra =
+            match reader.Name with
+            | "cId" as name -> dict.[name] <- readAsInt reader ; read tick venue scanRate ra
+            | "pe" as name -> dict.[name] <- readAsString reader ; read tick venue scanRate ra
+            | "p" as name -> dict.[name] <- readAsFloat reader ; read tick venue scanRate ra
+            | "priceType" as name -> dict.[name] <- readAsString reader ; read tick venue scanRate ra
+            | "d" as name -> dict.[name] <- readAsFloat reader ; read tick venue scanRate ra
+            | "v" as name -> dict.[name] <- readAsFloat reader ; read tick venue scanRate ra
+            | "volType" as name -> dict.[name] <- readAsString reader ; read tick venue scanRate ra
+            | "cvf" as name -> dict.[name] <- readAsFloat reader ; read tick venue scanRate ra
+            | "val" as name -> dict.[name] <- readAsFloat reader ; read tick venue scanRate ra
+            | "sc" as name -> dict.[name] <- readAsString reader ; read tick venue scanRate ra
+            | "haircut" as name -> dict.[name] <- readAsString reader ; read tick venue scanRate ra
+            | "haircutRsv" as name -> dict.[name] <- readAsString reader ; read tick venue scanRate ra
+            | "tick" as name -> read (Node (readTick reader) :: tick) venue scanRate ra
+            | "venue" as name -> read tick (Node (readVenue reader) :: venue) scanRate ra
+            | "scanRate" as name -> read tick venue (Node (readScanRate reader) :: scanRate) ra
+            | "ra" as name -> read tick venue scanRate (Node (readRa reader) :: ra)
+            | _ -> tick, venue, scanRate, ra
+        reader.ReadStartElement()
+        let tick, venue, scanRate, ra = read [] [] [] []
         reader.ReadEndElement()
         SpanXMLPhy(
             {
                     CId = dict.["cId"] :?> int
                     Pe = dict.["pe"] :?> string
                     P = dict.["p"] :?> float
+                    PriceType = dict.["priceType"] :?> string
                     D = dict.["d"] :?> float
                     V = dict.["v"] :?> float
+                    VolType = dict.["volType"] :?> string
                     Cvf = dict.["cvf"] :?> float
                     Val = dict.["val"] :?> float
-                    Sc = dict.["sc"] :?> float
-            }), ra
+                    Sc = dict.["sc"] :?> string
+                    Haircut = dict.["haircut"] :?> string
+                    HaircutRsv = dict.["haircutRsv"] :?> string
+            }), (tick @ venue @ scanRate @ ra)
 
     let readGroup (reader:System.Xml.XmlReader) : nodeType * tree list =
         let dict = ["id",0:>obj; "aVal","":>obj; ] |> toDict
@@ -266,47 +378,65 @@ module Parser =
         SpanXMLGroup(
             {
                     Id = dict.["id"] :?> int
-                    Aval = dict.["aVal"] :?> string
+                    AVal = dict.["aVal"] :?> string
             }), []
 
     let readEquity (reader:System.Xml.XmlReader) : nodeType * tree list =
-        let dict = ["cId",0:>obj; "isin","":>obj; "pe","":>obj; "p",0.0:>obj; "d",0.0:>obj; "v",0.0:>obj; "cvf",0.0:>obj; "val",0.0:>obj; "sc",0.0:>obj; "desc","":>obj; "type","":>obj; "subType","":>obj; ] |> toDict
+        let dict = [
+            "cId",0:>obj; "isin","":>obj; "pe","":>obj; "p",0.0:>obj; "d",0.0:>obj; "v",0.0:>obj; "cvf",0.0:>obj; "val",0.0:>obj; 
+            "sc",0.0:>obj; "desc","":>obj; "type","":>obj; "subType","":>obj; "cusip", "":>obj; "priceType","":>obj; "volType","":>obj; 
+            "haircut","":>obj; "haircutRsv","":>obj; 
+                    ] |> toDict
 
-        let rec read divRate ra =
+        let rec read divRate ra alias tick venue scanRate =
             match reader.Name with
-            | "cId" as name -> dict.[name] <- readAsInt reader ; read divRate ra
-            | "isin" as name -> dict.[name] <- readAsString reader ; read divRate ra
-            | "pe" as name -> dict.[name] <- readAsString reader ; read divRate ra
-            | "p" as name -> dict.[name] <- readAsFloat reader ; read divRate ra
-            | "d" as name -> dict.[name] <- readAsFloat reader ; read divRate ra
-            | "v" as name -> dict.[name] <- readAsFloat reader ; read divRate ra
-            | "cvf" as name -> dict.[name] <- readAsFloat reader ; read divRate ra
-            | "val" as name -> dict.[name] <- readAsFloat reader ; read divRate ra
-            | "sc" as name -> dict.[name] <- readAsFloat reader ; read divRate ra
-            | "desc" as name -> dict.[name] <- readAsString reader ; read divRate ra
-            | "type" as name -> dict.[name] <- readAsString reader ; read divRate ra
-            | "subType" as name -> dict.[name] <- readAsString reader ; read divRate ra
-            | "divRate" as name -> read (Node (readDivRate reader) :: divRate) ra
-            | "ra" as name -> read divRate (Node (readRa reader) :: ra)
-            | _ -> divRate, ra
+            | "cId" as name -> dict.[name] <- readAsInt reader ; read divRate ra alias tick venue scanRate 
+            | "isin" as name -> dict.[name] <- readAsString reader ; read divRate ra alias tick venue scanRate 
+            | "cusip" as name -> dict.[name] <- readAsString reader ; read divRate ra alias tick venue scanRate 
+            | "pe" as name -> dict.[name] <- readAsString reader ; read divRate ra alias tick venue scanRate 
+            | "p" as name -> dict.[name] <- readAsFloat reader ; read divRate ra alias tick venue scanRate 
+            | "priceType" as name -> dict.[name] <- readAsString reader ; read divRate ra alias tick venue scanRate 
+            | "d" as name -> dict.[name] <- readAsFloat reader ; read divRate ra alias tick venue scanRate 
+            | "v" as name -> dict.[name] <- readAsFloat reader ; read divRate ra alias tick venue scanRate 
+            | "volType" as name -> dict.[name] <- readAsString reader ; read divRate ra alias tick venue scanRate 
+            | "cvf" as name -> dict.[name] <- readAsFloat reader ; read divRate ra alias tick venue scanRate 
+            | "val" as name -> dict.[name] <- readAsFloat reader ; read divRate ra alias tick venue scanRate 
+            | "sc" as name -> dict.[name] <- readAsFloat reader ; read divRate ra alias tick venue scanRate 
+            | "desc" as name -> dict.[name] <- readAsString reader ; read divRate ra alias tick venue scanRate 
+            | "type" as name -> dict.[name] <- readAsString reader ; read divRate ra alias tick venue scanRate 
+            | "subType" as name -> dict.[name] <- readAsString reader ; read divRate ra alias tick venue scanRate 
+            | "haircut" as name -> dict.[name] <- readAsString reader ; read divRate ra alias tick venue scanRate 
+            | "haircutRsv" as name -> dict.[name] <- readAsString reader ; read divRate ra alias tick venue scanRate 
+            | "divRate" as name -> read (Node (readDivRate reader) :: divRate) ra alias tick venue scanRate 
+            | "ra" as name -> read divRate (Node (readRa reader) :: ra) alias tick venue scanRate 
+            | "alias" as name -> read divRate ra (Node (readAlias reader) :: alias) tick venue scanRate 
+            | "tick" as name -> read divRate ra alias (Node (readTick reader) :: tick) venue scanRate 
+            | "venue" as name -> read divRate ra alias tick (Node (readVenue reader) :: venue) scanRate 
+            | "scanRate" as name -> read divRate ra alias tick venue (Node (readScanRate reader) :: scanRate)
+            | _ -> divRate, ra, alias, tick, venue, scanRate
         reader.ReadStartElement()
-        let divRate, ra = read [] []
+        let divRate, ra, alias, tick, venue, scanRate = read [] [] [] [] [] []
         reader.ReadEndElement()
         SpanXMLEquity(
             {
                     CId = dict.["cId"] :?> int
                     Isin = dict.["isin"] :?> string
+                    Cusip = dict.["cusip"] :?> string
                     Pe = dict.["pe"] :?> string
                     P = dict.["p"] :?> float
+                    PriceType = dict.["priceType"] :?> string
                     D = dict.["d"] :?> float
                     V = dict.["v"] :?> float
+                    VolType = dict.["volType"] :?> string
                     Cvf = dict.["cvf"] :?> float
                     Val = dict.["val"] :?> float
                     Sc = dict.["sc"] :?> float
                     Desc = dict.["desc"] :?> string
                     Type = dict.["type"] :?> string
                     SubType = dict.["subType"] :?> string
-            }), (divRate @ ra)
+                    Haircut = dict.["haircut"] :?> string
+                    HaircutRsv = dict.["haircutRsv"] :?> string
+            }), (divRate @ ra @ alias @ tick @ venue @ scanRate)
 
     let readUndPf (reader:System.Xml.XmlReader) : nodeType * tree list =
         let dict = ["exch","":>obj; "pfId",0:>obj; "pfCode","":>obj; "pfType","":>obj; "s","":>obj; "i",0.0:>obj; ] |> toDict
@@ -1151,7 +1281,7 @@ module Parser =
         SpanXMLGroupDef(
             {
                     Id = dict.["id"] :?> int
-                    Aval = dict.["aVal"] :?> string
+                    AVal = dict.["aVal"] :?> string
                     Description = dict.["description"] :?> string
             }), []
 
