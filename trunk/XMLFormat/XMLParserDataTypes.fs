@@ -22,24 +22,36 @@ type SpanXMLUndC = {
     CId : int;
     S : string;
     I : float;
+    LegPriceFlag : string;// one of N, L, S+, S-
+    LegPrice : float;
+    Type : string;
     }
 type SpanXMLIntrRate = {
     Val : float;
-    Rl : int;
-    Cpm : int;
-    Exm : int;
+    Rl : float;
+    Cpm : float;
+    Tm : float;
+    Exm : float;
+    }
+type SpanXMLAlias = {
+    AType : string;
+    AVal : string;
     }
 type SpanXMLOpt = {
     CId : int;
+//    Alias : SpanXMLAlias list;
     O : string;
     K : float;
     P : float;
     Pq : int;
+    PriceType : string;
     D : float;
     V : float;
+    VolType : string;
     Val : float;
     Cvf : float;
     Svf : float;
+    Sc : string
 //    Ra : SpanXMLRa list;
     }
 type SpanXMLRate = {
@@ -52,47 +64,89 @@ type SpanXMLScanRate = {
     PriceScanPct : float;
     VolScan : float;
     VolScanPct : float;
+    PriceScanDown : float;
+    PriceScanDownPct : float;
+    VolScanDown : float;
+    VolScanDownPct : float;
+    QuoteInOptTerms : string; // boolean
     }
  // Level 7;
 type SpanXMLPriceScanDef = {
     Mult : float;
     Numerator : float;
     Denominator : float;
+    DefType : string;
     }
 type SpanXMLVolScanDef = {
     Mult : float;
     Numerator : float;
     Denominator : float;
     }
+type SpanXMLTick = {
+    Id : string;
+    Val : float;
+    LoVal : string;
+    HiVal : string;
+    Desc : string;
+    }
+type SpanXMLVenue = {
+    Id : string;
+    Hours : string;
+    ListDesc : string;
+    FlexDesc : string;
+    StrikeDesc : string;
+    //Tick : SpanXMLTick list;
+    Limits : string;
+    LimitsDesc : string;
+    FdotRule : string;
+    LdotRule : string;
+    }
 type SpanXMLPhy = {
     CId : int;
+    //Alias : SpanXMLAlias list;
     Pe : string;
     P : float;
+    PriceType : string;
     D : float;
     V : float;
+    VolType : string;
     Cvf : float;
     Val : float;
-    Sc : float;
+    Sc : string;
+    Haircut : string;
+    HaircutRsv : string;
+    //Tick : SpanXMLTick list;
+    //Venue : SpanXMLVenue list;
+    //ScanRate : SpanXMLScanRate list;
     //Ra : SpanXMLRa list;
     }
 type SpanXMLGroup = {
     Id : int;
-    Aval : string;
+    AVal : string;
     }
 type SpanXMLEquity = {
     CId : int;
+    //Alias : SpanXMLAlias list;
     Isin : string;
+    Cusip : string;
     Pe : string;
     P : float;
+    PriceType : string;
     D : float;
     V : float;
+    VolType : string;
     Cvf : float;
     Val : float;
     Sc : float;
     Desc : string;
     Type : string;
     SubType : string;
+    Haircut : string;
+    HaircutRsv : string;
 //    DivRate : SpanXMLDivRate list;
+    //Tick : SpanXMLTick list;
+    //Venue : SpanXMLVenue list;
+    //ScanRate : SpanXMLScanRate list;
 //    Ra : SpanXMLRa list;
     }
 type SpanXMLUndPf = {
@@ -404,7 +458,7 @@ type SpanXMLGroupTypeDef = {
     }
 type SpanXMLGroupDef = {
     Id : int;
-    Aval : string;
+    AVal : string;
     Description : string;
     }
 type SpanXMLClearingOrg = {
@@ -452,6 +506,9 @@ type SpanXMLTopLevel = struct end
 // SpanFile : SpanXMLLevel2 list
 
 type nodeType =
+    | SpanXMLAlias of SpanXMLAlias
+    | SpanXMLTick of SpanXMLTick
+    | SpanXMLVenue of SpanXMLVenue
     | SpanXMLDiv of SpanXMLDiv
     | SpanXMLRa of SpanXMLRa
     | SpanXMLDivRate of SpanXMLDivRate
