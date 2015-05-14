@@ -1,0 +1,1 @@
+SPAN files are published by various exchanges in a number of formats. This project provides parsers for the different formats and some sample code to demonstrate some of the steps in the margin / collateral calculation.
